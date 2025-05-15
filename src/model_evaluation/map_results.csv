@@ -1,0 +1,16 @@
+Metric,Value
+map,tensor(0.3911)
+map_50,tensor(0.5902)
+map_75,tensor(0.4331)
+map_small,tensor(0.2247)
+map_medium,tensor(0.3017)
+map_large,tensor(0.5213)
+mar_1,tensor(0.2776)
+mar_10,tensor(0.5372)
+mar_100,tensor(0.5627)
+mar_small,tensor(0.4221)
+mar_medium,tensor(0.5080)
+mar_large,tensor(0.6766)
+map_per_class,tensor(-1.)
+mar_100_per_class,tensor(-1.)
+classes,"tensor(1, dtype=torch.int32)"
