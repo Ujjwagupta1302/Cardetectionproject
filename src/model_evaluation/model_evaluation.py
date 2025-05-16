@@ -13,10 +13,13 @@ import os
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import torch
 from tqdm import tqdm
+import boto3
+from config import bucket_name
+
 
 
 # Assuming you already have your model and test_loader
-def evaluate(model, device,test_loader):
+def evaluate(model, device,test_loader,object_key = "model_evaluation/map_results.csv"):
     model.eval()
     metric = MeanAveragePrecision()
 
@@ -39,16 +42,18 @@ def evaluate(model, device,test_loader):
     # Get mAP results
     map_results = metric.compute()
 
-    # Add averaged localization loss
-    #map_results["avg_loss_box_reg"] = total_loss_box_reg / total_batches if total_batches > 0 else 0.0
-
-    save_dir = "src\model_evaluation"
-    os.makedirs(save_dir, exist_ok=True)
-
-    save_path = os.path.join(save_dir, "model_results")
-
     df = pd.DataFrame(map_results.items(), columns=["Metric", "Value"])
-    df.to_csv(save_path, index=False)
+
+    # Save DataFrame to in-memory CSV
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)
+
+    # Upload to S3
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket=bucket_name, Key=object_key, Body=csv_buffer.getvalue())
+
+    print(f"mAP results uploaded to s3://{bucket_name}/{object_key}")
 
     return map_results
 

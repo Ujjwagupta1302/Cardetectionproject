@@ -24,3 +24,4 @@ python-multipart
 torchmetrics
 pycocotools
 h5py
+boto3

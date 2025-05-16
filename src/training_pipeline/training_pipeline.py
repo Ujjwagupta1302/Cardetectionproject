@@ -17,18 +17,29 @@ from src.data_loading.data_loading import train_loader, val_loader
 
 from src.model_training.model_training import train_model
 from src.model_training.model_training import model, device
+from config import bucket_name
+
+import pickle
+import io
+import boto3
+
+def save_loss_history_to_s3(loss_history, bucket_name, object_key="model_training/loss_history.pkl"):
+    buffer = io.BytesIO()
+    pickle.dump(loss_history, buffer)
+    buffer.seek(0)
+    s3 = boto3.client('s3')
+    s3.upload_fileobj(buffer, bucket_name, object_key)
+
+    print(f"Loss history uploaded to s3://{bucket_name}/{object_key}")
 
 
-loss_history = train_model(model, device, train_loader, num_epochs=5) 
+loss_history = train_model(model, device, train_loader, num_epochs=5)
 
-loss_save_dir = "src\model_training"
-os.makedirs(loss_save_dir, exist_ok=True)
+object_key = "model_training/loss_history.pkl"
 
-loss_save_path = os.path.join(loss_save_dir, "loss_history.pkl")
+save_loss_history_to_s3(loss_history, bucket_name, object_key)
 
-# Save the dictionary using pickle
-with open(loss_save_path, "wb") as f:
-    pickle.dump(loss_history, f)
+
 
 
 

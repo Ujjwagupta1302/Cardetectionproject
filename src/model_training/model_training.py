@@ -8,17 +8,26 @@ import torchvision.transforms.functional as F
 import torchvision.transforms as T
 from torch.utils.data import Dataset
 import os
+import io 
 from PIL import Image
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import h5py
+from src.cloud.s3_syncer import S3Sync
+import boto3
+from config import bucket_name
 
-def save_weights_to_h5(model, file_path="src/model_weights/model_weights.h5"):
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with h5py.File(file_path, 'w') as f:
+def save_weights_to_h5(model,object_key="model_weights/model_weights.h5"):
+    buffer = io.BytesIO()
+    with h5py.File(buffer, 'w') as f:
         for name, param in model.named_parameters():
             f.create_dataset(name, data=param.detach().cpu().numpy())
+    buffer.seek(0)
+    s3 = boto3.client('s3')
+    s3.upload_fileobj(buffer, bucket_name, object_key)
+    print(f"Model weights uploaded to s3://{bucket_name}/{object_key}")
+
 
 def train_model(model,device, train_loader, num_epochs=None, num_classes=2):
     params = [p for p in model.parameters() if p.requires_grad]
@@ -83,14 +92,22 @@ def train_model(model,device, train_loader, num_epochs=None, num_classes=2):
 
     writer.close()
 
-    save_dir = "src\model_training"
-    os.makedirs(save_dir, exist_ok=True)
 
-    save_path = os.path.join(save_dir, "map_results.csv")
+    buffer = io.BytesIO() 
 
-    torch.save(model.state_dict(), save_path)
-    print("Model saved as car_detector.pth")
 
-    save_weights_to_h5(model)
+
+    torch.save(model.state_dict(), buffer)
+    buffer.seek(0) 
+
+
+    s3 = boto3.client('s3')
+    object_key = "models/car_detector.pth"
+    s3.upload_fileobj(buffer, bucket_name, object_key)
+
+    print(f"Model uploaded to s3://{bucket_name}/{object_key}")
+    
+
+    save_weights_to_h5(model,bucket_name)
     return loss_history
 
