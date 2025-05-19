@@ -21,7 +21,8 @@ jobs:
           python-version: '3.10'
 
       - name: Install moto for S3 mocking
-        run: pip install "moto[s3]"
+        run: 
+          pip install "moto[s3]"
 
       - name: Install Dependencies
         run: |
