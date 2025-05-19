@@ -1,6 +1,11 @@
 # tests/test_operations.py
 
 import pytest
+from moto import mock_s3
+import pandas as pd
+import io
+import boto3
+
 from src.operations import (
     get_docs_response,
     get_root_response,
