@@ -1,7 +1,7 @@
 # tests/test_operations.py
 
 import pytest
-from moto import mock_s3
+from moto.s3 import mock_s3
 import pandas as pd
 import io
 import boto3
@@ -22,6 +22,8 @@ async def test_docs_endpoint():
 async def test_root_redirect():
     response = await get_root_response()
     assert response.status_code in [200, 404]
+
+
 
 @pytest.mark.asyncio
 @mock_s3
